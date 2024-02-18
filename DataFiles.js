@@ -3,77 +3,57 @@ const uuid = require('uuid');
 
 class DataFiles {
   constructor() {
-    this.images = new Map();
+    this.images = [];
   }
 
   init() {
-    // fs.stat('dataBase.json', function(err, stat) {
-    //   if (err === null) {
-    //     console.log('File dataBase.json exists');
-    //   } else if (err.code === 'ENOENT') { 
-    //     // file does not exist
-    //     fs.open('dataBase.json', 'w', (err) => {
-    //       if (err) throw err;
-    //       console.log('File created');
-    //     });
-    //   } else {
-    //     console.log('Some other error: ', err.code);
-    //   }
-    // });
-
-    // fs.readFile("dataBase.json", this.initFile.bind(this));
-    const files = fs.readdirSync("public");
-    files.forEach((file) => {
-      if (file === '.getkeep') {
-        return;
+    // инициализация класса
+    fs.stat('./public/dataBase.json', function(err, stat) {
+      if (err === null) {
+        console.log('File dataBase.json exists');
+      } else if (err.code === 'ENOENT') { 
+        // file does not exist
+        fs.open('./public/dataBase.json', 'w', (err) => {
+          if (err) throw err;
+          console.log('File created');
+        });
+      } else {
+        console.log('Some other error: ', err.code);
       }
-      const id = uuid.v4();
-      this.images[id] = {
-        name: file,
-        path: `/${file}`
-      };
-    }); 
-  // }
+    });
+
+    fs.readFile("./public/dataBase.json", 'utf8', this.initFile.bind(this));
   }
 
-  // initFile(error, data) {
-  //   if (error) { // если возникла ошибка
-  //     return console.log(error);
-  //   }
-  //   const json = JSON.parse(data);
-  //   for (const id of Object.keys(json.images)) {
-  //     console.log('++++file', id)
-  //     // this.images.set(id, json.images[id]);
-  //     this.images[id] = json.images[id];
-  //   }
-  //   console.log(this.images)
-  // }
+  initFile(error, data) {
+    // Callback - чтение файла со списком фотографий
+    if (error) { // если возникла ошибка
+      return console.log(error);
+    }
+    const json = JSON.parse(data);
+    for (const obj of json.images) {
+      this.images.push(obj);
+    }
+  }
 
   addImage(file) {
-    const id = uuid.v4();
-    const index = file.name.lastIndexOf('.');
-    const expansion = file.name.slice(index);
-    const newName = id + expansion;
-    this.images[id] = {
+    // Добавлениие новой фотографии в базу данных
+    const result = {
+      id: uuid.v4(),
       name: file.name,
-      path: `/${newName}`
-    };
-    // this.saveFile();
-    return {
-      id: id,
-      value: this.images[id] 
-    };
+      path: `/${file.name}`
+    }
+    this.images.push(result);
+    this.saveFile();
+    return result;
   }
 
-  // saveFile() {
-  //   // const jsonText = JSON.stringify(Array.from(this.images.entries()));
-  //   fs.writeFile("dataBase.json", this.images, function(error){
-  //     if(error){ // если ошибка
-  //     return console.log(error);
-  //     }
-  //     console.log("Файл успешно записан");
-  //   });
-  // }
+  saveFile() {
+    // Сохраняет изменения в файл
+    const obj = { images: this.images };
+    const file = JSON.stringify(obj, null, 2);
+    fs.writeFileSync("./public/dataBase.json", file);
+  }
 }
 
 module.exports = {

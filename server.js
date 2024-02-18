@@ -1,12 +1,10 @@
 const path = require('path');
 const fs = require('fs');
-const uuid = require('uuid');
 const koaStatic = require('koa-static');
 const { DataFiles } = require('./DataFiles');
 
 const dataBase = new DataFiles();
 dataBase.init();
-console.log(dataBase);
 
 const Koa = require('koa'); // импорт библиотеки (фреймворк сервера)
 const app = new Koa(); // создание нашего сервера
@@ -33,22 +31,20 @@ app.use((ctx, next) => {
   // console.log('ctx.request.files', ctx.request.files); // Получение списка файлов по имени поля FormData
   // file - имя поля input
   const { file } = ctx.request.files;
-  const public = path.join(__dirname, '/public');
-  let listImages = {};
+  let listImages = [];
   if (file.length > 1) {
     for (const item of file) {
       const obj = dataBase.addImage(item);
-      fs.copyFileSync(item.path, public + obj.value.path);
-      listImages[obj.id] = obj.value;
+      fs.copyFileSync(item.path, public + obj.path);
+      listImages.push(obj);
     }
   } else {
     const obj = dataBase.addImage(file);
-    fs.copyFileSync(file.path, public + obj.value.path);
-    listImages[obj.id] = obj.value;
+    fs.copyFileSync(file.path, public + obj.path);
+    listImages.push(obj);
   }
-  console.log('добавлен ------------', dataBase);
   ctx.response.body = listImages;
-  ctx.response.status = 202;
+  ctx.response.status = 201;
   next();
 });
 
@@ -59,10 +55,9 @@ app.use((ctx, next) => {
     next();
     return;
   }
-  console.log('dataBase.images', dataBase.images)
   ctx.response.body = dataBase.images;
   ctx.response.status = 200;
-  next(); 
+  next();
 }); 
 
 app.use((ctx, next) => {
@@ -72,11 +67,17 @@ app.use((ctx, next) => {
     next();
     return;
   }
-  const path = './public' + dataBase.images[id].path;
-  fs.unlinkSync(path);
-  delete dataBase.images[id];
+  const index = dataBase.images.findIndex((item) => item.id === id);
+  const name = dataBase.images[index].name;
+  const path = './public' + dataBase.images[index].path;
+  dataBase.images.splice(index, 1);
+  const newIndex = dataBase.images.findIndex((item) => item.name === name);
+  if (newIndex === -1) {
+    fs.unlinkSync(path);
+  }
+  dataBase.saveFile();
   ctx.response.body = 'ok';
-  ctx.response.status = 200;
+  ctx.response.status = 204;
   next();
 });
 
@@ -87,22 +88,20 @@ app.use((ctx) => {
     return;
   }
   const { file } = ctx.request.files;
-  const public = path.join(__dirname, '/public');
-  const listImages = {};
+  const listImages = [];
   if (file.length > 1) {
     for (const item of file) {
       const obj = dataBase.addImage(item);
-      fs.copyFileSync(item.path, public + obj.value.path);
-      listImages[obj.id] = obj.value;
+      fs.copyFileSync(item.path, public + obj.path);
+      listImages.push(obj);
     }
   } else {
     const obj = dataBase.addImage(file);
-    fs.copyFileSync(file.path, public + obj.value.path);
-    listImages[obj.id] = obj.value;
+    fs.copyFileSync(file.path, public + obj.path);
+    listImages.push(obj);
   }
-  console.log('добавлен ------------', dataBase);
   ctx.response.body = listImages;
-  ctx.response.status = 202; 
+  ctx.response.status = 201; 
 });
 
 app.listen('9000', (err) => { // два аргумента (1-й это порт, 2-й это callback по результатам запуска сервера)
@@ -110,5 +109,5 @@ app.listen('9000', (err) => { // два аргумента (1-й это порт
     console.log(err);
     return;
   }
-  console.log('Server is listening to ' + '9000');
+  console.log('Server is listening to 9000');
 });
