@@ -1,24 +1,25 @@
 const path = require('path');
 const fs = require('fs');
 const koaStatic = require('koa-static');
+const cors = require('@koa/cors');
+const koaBody = require('koa-body'); // нужен для обработки тела запроса
+const Koa = require('koa'); // импорт библиотеки (фреймворк сервера)
 const { DataFiles } = require('./DataFiles');
 
 const dataBase = new DataFiles();
 dataBase.init();
 
-const Koa = require('koa'); // импорт библиотеки (фреймворк сервера)
 const app = new Koa(); // создание нашего сервера
 
-const public = path.join(__dirname, '/public');
-app.use(koaStatic(public)); // Дает возможность раздавать файлы
+const publicImg = path.join(__dirname, '/public');
+app.use(koaStatic(publicImg)); // Дает возможность раздавать файлы
 
-const koaBody = require('koa-body'); // нужен для обработки тела запроса
-app.use(koaBody({ // чтобы обработать тело запроса (обязательно объявить до Middleware где работаем с body)
+app.use(koaBody({
+  // чтобы обработать тело запроса (обязательно объявить до Middleware где работаем с body)
   urlencoded: true, // иначе тело будет undefined (тело будет строкой)
   multipart: true, // если тело запроса закодировано через FormData
 }));
 
-const cors = require('@koa/cors');
 app.use(cors());
 
 app.use((ctx, next) => {
@@ -28,19 +29,20 @@ app.use((ctx, next) => {
     next();
     return;
   }
-  // console.log('ctx.request.files', ctx.request.files); // Получение списка файлов по имени поля FormData
+  // console.log('files', ctx.request.files); // Получение списка файлов по имени поля FormData
   // file - имя поля input
   const { file } = ctx.request.files;
-  let listImages = [];
+  const listImages = [];
   if (file.length > 1) {
+    /* eslint-disable-next-line */
     for (const item of file) {
       const obj = dataBase.addImage(item);
-      fs.copyFileSync(item.path, public + obj.path);
+      fs.copyFileSync(item.path, publicImg + obj.path);
       listImages.push(obj);
     }
   } else {
     const obj = dataBase.addImage(file);
-    fs.copyFileSync(file.path, public + obj.path);
+    fs.copyFileSync(file.path, publicImg + obj.path);
     listImages.push(obj);
   }
   ctx.response.body = listImages;
@@ -58,7 +60,7 @@ app.use((ctx, next) => {
   ctx.response.body = dataBase.images;
   ctx.response.status = 200;
   next();
-}); 
+});
 
 app.use((ctx, next) => {
   // Удаление файлов
@@ -68,12 +70,12 @@ app.use((ctx, next) => {
     return;
   }
   const index = dataBase.images.findIndex((item) => item.id === id);
-  const name = dataBase.images[index].name;
-  const path = './public' + dataBase.images[index].path;
+  const { name } = dataBase.images[index];
+  const pathToFile = `./public${dataBase.images[index].path}`;
   dataBase.images.splice(index, 1);
   const newIndex = dataBase.images.findIndex((item) => item.name === name);
   if (newIndex === -1) {
-    fs.unlinkSync(path);
+    fs.unlinkSync(pathToFile);
   }
   dataBase.saveFile();
   ctx.response.body = 'ok';
@@ -82,7 +84,7 @@ app.use((ctx, next) => {
 });
 
 app.use((ctx) => {
-  // DROP фото 
+  // DROP фото
   const { method } = ctx.request.query;
   if ((ctx.request.method !== 'POST') || (method !== 'dropImages')) {
     return;
@@ -90,22 +92,25 @@ app.use((ctx) => {
   const { file } = ctx.request.files;
   const listImages = [];
   if (file.length > 1) {
+    /* eslint-disable-next-line */
     for (const item of file) {
       const obj = dataBase.addImage(item);
-      fs.copyFileSync(item.path, public + obj.path);
+      fs.copyFileSync(item.path, publicImg + obj.path);
       listImages.push(obj);
     }
   } else {
     const obj = dataBase.addImage(file);
-    fs.copyFileSync(file.path, public + obj.path);
+    fs.copyFileSync(file.path, publicImg + obj.path);
     listImages.push(obj);
   }
   ctx.response.body = listImages;
-  ctx.response.status = 201; 
+  ctx.response.status = 201;
 });
 
-app.listen('9000', (err) => { // два аргумента (1-й это порт, 2-й это callback по результатам запуска сервера)
-  if(err) { // в callback может быть передана ошибка (выводим её в консоль для примера, если она появится)
+app.listen('9000', (err) => {
+  // два аргумента (1-й это порт, 2-й это callback по результатам запуска сервера)
+  if (err) { // в callback может быть передана ошибка
+    // (выводим её в консоль для примера, если она появится)
     console.log(err);
     return;
   }

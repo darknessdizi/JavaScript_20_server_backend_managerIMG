@@ -8,13 +8,13 @@ class DataFiles {
 
   init() {
     // инициализация класса
-    fs.stat('./public/dataBase.json', function(err, stat) {
+    fs.stat('./public/dataBase.json', (err) => {
       if (err === null) {
         console.log('File dataBase.json exists');
-      } else if (err.code === 'ENOENT') { 
+      } else if (err.code === 'ENOENT') {
         // file does not exist
-        fs.open('./public/dataBase.json', 'w', (err) => {
-          if (err) throw err;
+        fs.open('./public/dataBase.json', 'w', (error) => {
+          if (error) throw error;
           console.log('File created');
         });
       } else {
@@ -22,7 +22,7 @@ class DataFiles {
       }
     });
 
-    fs.readFile("./public/dataBase.json", 'utf8', this.initFile.bind(this));
+    fs.readFile('./public/dataBase.json', 'utf8', this.initFile.bind(this));
   }
 
   initFile(error, data) {
@@ -31,9 +31,11 @@ class DataFiles {
       return console.log(error);
     }
     const json = JSON.parse(data);
+    /* eslint-disable-next-line */
     for (const obj of json.images) {
       this.images.push(obj);
     }
+    return null;
   }
 
   addImage(file) {
@@ -41,8 +43,8 @@ class DataFiles {
     const result = {
       id: uuid.v4(),
       name: file.name,
-      path: `/${file.name}`
-    }
+      path: `/${file.name}`,
+    };
     this.images.push(result);
     this.saveFile();
     return result;
@@ -52,10 +54,10 @@ class DataFiles {
     // Сохраняет изменения в файл
     const obj = { images: this.images };
     const file = JSON.stringify(obj, null, 2);
-    fs.writeFileSync("./public/dataBase.json", file);
+    fs.writeFileSync('./public/dataBase.json', file);
   }
 }
 
 module.exports = {
-  DataFiles
+  DataFiles,
 };
