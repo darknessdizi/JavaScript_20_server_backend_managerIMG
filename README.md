@@ -2,9 +2,9 @@
 
 ## Fronted
 
-Ссылка на git-hub репозиторий (fronted): https://darknessdizi.github.io/JavaScript_20_fronted_managerIMG/
+Ссылка на git-hub репозиторий (fronted): https://github.com/darknessdizi/JavaScript_20_fronted_managerIMG.git
 
-Ссылка на страницу: https://github.com/darknessdizi/JavaScript_20_fronted_managerIMG.git
+Ссылка на страницу: https://darknessdizi.github.io/JavaScript_20_fronted_managerIMG/
 
 ---
 
