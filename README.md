@@ -1,5 +1,15 @@
 # Домашнее задание к занятию "7. Работа с HTTP"
 
+## Fronted
+
+Ссылка на git-hub репозиторий (fronted): https://darknessdizi.github.io/JavaScript_20_fronted_managerIMG/
+
+Ссылка на страницу: https://github.com/darknessdizi/JavaScript_20_fronted_managerIMG.git
+
+---
+
+## Backend
+
 Правила сдачи задания:
 
 ### Image Manager (задача со звёздочкой)
